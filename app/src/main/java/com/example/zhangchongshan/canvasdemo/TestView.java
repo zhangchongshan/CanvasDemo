@@ -2,6 +2,7 @@ package com.example.zhangchongshan.canvasdemo;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
@@ -25,6 +26,11 @@ public class TestView extends View {
     private boolean isDraw=false;
     Region re=new Region();
 
+    int pointTimes=0;
+    private int Times=0;
+    private int width;
+    private int height;
+
     public TestView(Context context, AttributeSet attrs) {
         super(context, attrs);
         mGesturePaint.setColor(context.getResources().getColor(android.R.color.holo_green_dark));
@@ -40,14 +46,21 @@ public class TestView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
+        width = this.getWidth()/10;
+        height = this.getHeight()/10;
         canvas.drawPath(mPath, mGesturePaint);
+        if (isDraw) {
+            Paint p = new Paint();
+            p.setColor(Color.RED);// 设置红色
 
+            canvas.drawText("面积：" + pointTimes+"次数"+Times, 10, 20, p);
+        }
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event)
     {
-        if(isDraw){
+        /*if(isDraw){
             //------关键部分 判断点是否在 一个闭合的path内--------//
             if(event.getAction()==MotionEvent.ACTION_DOWN){
                 //构造一个区域对象，左闭右开的。
@@ -62,7 +75,7 @@ public class TestView extends View {
                 Log.e("hhhhhhhhhhhhhh","--判断点是否则范围内----"+re.contains((int)event.getX(), (int)event.getY()));
             }
             return true;
-        }
+        }*/
         switch (event.getAction())
         {
             case MotionEvent.ACTION_DOWN:
@@ -73,11 +86,14 @@ public class TestView extends View {
                 break;
             case MotionEvent.ACTION_UP:
                 mPath.close();
+                Area();
                 isDraw=true;
+                Times++;
                 break;
         }
         //更新绘制
         invalidate();
+
         return true;
     }
 
@@ -107,9 +123,37 @@ public class TestView extends View {
         {
             //两点连成直线
             mPath.lineTo(x, y);
+
             //第二次执行时，第一次结束调用的坐标值将作为第二次调用的初始坐标值
             mX = x;
             mY = y;
         }
+    }
+    public void Area(){
+
+        boolean result=false;
+        pointTimes=0;
+        for(int i=0;i<width;i++) {
+            for (int j=0;j<height;j++) {
+                RectF r = new RectF();
+                //计算控制点的边界
+                mPath.computeBounds(r, true);
+                //设置区域路径和剪辑描述的区域
+                re.setPath(mPath, new Region((int) r.left, (int) r.top, (int) r.right, (int) r.bottom));
+
+                //在封闭的path内返回true 不在返回false
+                //Log.e("hhhhhhhhhhhhhh", "--判断点是否则范围内----" + re.contains((int) event.getX(), (int) event.getY()));
+                result=re.contains(i*10 ,j*10);
+                if (result){
+                    pointTimes++;
+                    result=false;
+                }
+            }
+        }
+        Log.e("hhhhhhhhhhhhhh", "--判断点是否则范围内----" + re.contains(100, 100));
+        Log.e("aaaaaaaa",""+pointTimes);
+        Log.e("aaaaaaaa",""+height);
+        Log.e("aaaaaaaa",""+result);
+
     }
 }
